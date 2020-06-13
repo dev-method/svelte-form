@@ -3,6 +3,7 @@
 	import settings from "./env.js";
 	import PouchDB from 'pouchdb-browser'
 	import { onMount } from "svelte";
+	let csrf = document.getElementsByName("csrfmiddlewaretoken")[0].value
 
 	let  state = {
 		isOnline: true,
@@ -55,7 +56,8 @@
 							method: "POST",
 							headers: {
 								Accept: "application/json",
-								'Content-Type': "application/json"
+								'Content-Type': "application/json",
+								'X-CSRFToken':csrf.toString()
 							},
 							body: JSON.stringify({"name":item.doc.name, "contacts":item.doc.mail, "description":item.doc.message})
 						}).then(resp=>{
@@ -136,7 +138,9 @@
 				method: "POST",
 				headers: {
 					Accept: "application/json",
-					'Content-Type': "application/json"
+					'Content-Type': "application/json",
+					'X-CSRFToken':csrf.toString()
+
 				},
 				body: JSON.stringify({"name":mess.name.value, "contacts":mess.mail.value, "description":mess.text.value})
 			}).then(resp=>{
@@ -189,12 +193,9 @@
 
 </script>
 
-<main id="form">
+<div id="form">
 	<div class="form-container">
-		<form class="contact2-form validate-form">
-			<span class="contact2-form-title">
-				ОСТАВЬТЕ СООБЩЕНИЕ ДЛЯ НАС
-			</span>
+		<div class="contact2-form validate-form">
 			<div class="contacts-form-group">
 				<div class="form-name-wr wrap-input2 validate-input">
 					<input on:focus = {onFocus(settings.name_field_id, state.message)} on:blur={onBlur(this,state.message.name.value)} class="input2" type="text" id={settings.name_field_id} bind:value = {state.message.name.value}>
@@ -210,202 +211,19 @@
 				<span class="focus-input2" data-placeholder="СООБЩЕНИЕ"></span>
 			</div>
 			<div class="container-contact2-form-btn">
-				{#if state.recaptcha.message}
-				<div class="recaptcha-alert">
-					{state.recaptcha.message}
-				</div>
-				{/if}
-				<div id="google-captcha">
-				</div>
 				<div on:click = {validateAndSendForm(state)} class="contact2-form-btn">
 					ОТПРАВИТЬ СООБЩЕНИНЕ
 				</div>
 			</div>
-		</form>
+			<div class="recaptcha-container">
+				{#if state.recaptcha.message}
+					<div class="recaptcha-alert">
+						{state.recaptcha.message}
+					</div>
+				{/if}
+				<div id="google-captcha">
+				</div>
+			</div>
+		</div>
 	</div>
-</main>
-
-<style>
-	.form-container {
-		width: 50%;
-		margin: auto;
-	}
-	main {
-		text-align: center;
-		padding: 1em;
-		margin: 0 auto;
-	}
-
-	input {
-		outline: none;
-		border: none;
-	}
-
-	textarea {
-		outline: none;
-		border: none;
-	}
-	.contacts-form-group {
-		display: flex;
-	}
-	.form-mail-wr {
-		margin-left: 20px;
-	}
-	textarea:focus, input:focus {
-		border-color: transparent !important;
-	}
-	.contact2-form {
-		width: 100%;
-	}
-	.contact2-form input {
-		border: none;
-	}
-	.contact2-form textarea {
-		border: none;
-	}
-	.contact2-form-title {
-		display: block;
-		font-size: 39px;
-		color: #333333;
-		line-height: 1.2;
-		text-align: center;
-		padding-bottom: 90px;
-	}
-	.validate-input:focus {
-		border: none;
-	}
-
-
-	/*------------------------------------------------------------------
-    [  ]*/
-
-	.wrap-input2 {
-		width: 100%;
-		position: relative;
-		border-bottom: 2px solid #adadad;
-		margin-bottom: 37px;
-	}
-
-	.input2 {
-		display: block;
-		width: 100%;
-		font-size: 15px;
-		color: #555555;
-		line-height: 1.2;
-	}
-
-	.focus-input2 {
-		position: absolute;
-		display: block;
-		width: 100%;
-		height: 100%;
-		top: 0;
-		left: 0;
-		pointer-events: none;
-	}
-
-	.focus-input2::before {
-		content: "";
-		display: block;
-		position: absolute;
-		bottom: -2px;
-		left: 0;
-		width: 0;
-		height: 2px;
-
-		-webkit-transition: all 0.4s;
-		-o-transition: all 0.4s;
-		-moz-transition: all 0.4s;
-		transition: all 0.4s;
-
-		background: #678595;
-		background: -webkit-linear-gradient(45deg, #678595, #7e9fb1);
-		background: -o-linear-gradient(45deg, #678595, #7e9fb1);
-		background: -moz-linear-gradient(45deg, #678595, #7e9fb1);
-		background: linear-gradient(45deg, #678595, #7e9fb1);
-	}
-
-	.focus-input2::after {
-		content: attr(data-placeholder);
-		display: block;
-		width: 100%;
-		position: absolute;
-		top: 0px;
-		left: 0;
-		font-size: 13px;
-		color: #999999;
-		line-height: 1.2;
-
-		-webkit-transition: all 0.4s;
-		-o-transition: all 0.4s;
-		-moz-transition: all 0.4s;
-		transition: all 0.4s;
-	}
-
-	/*---------------------------------------------*/
-	input.input2 {
-		height: 45px;
-	}
-
-	input.input2 + .focus-input2::after {
-		top: 16px;
-		left: 0;
-	}
-
-	textarea.input2 {
-		min-height: 115px;
-		padding-top: 13px;
-		padding-bottom: 13px;
-	}
-
-	textarea.input2 + .focus-input2::after {
-		top: 16px;
-		left: 0;
-	}
-
-	.input2:focus + .focus-input2::after {
-		top: -13px;
-	}
-
-	.input2:focus + .focus-input2::before {
-		width: 100%;
-	}
-
-	.has-val.input2 + .focus-input2::after {
-		top: -13px;
-	}
-
-	.has-val.input2 + .focus-input2::before {
-		width: 100%;
-	}
-
-	/*------------------------------------------------------------------
-    [ Button ]*/
-	.container-contact2-form-btn {
-		display: -webkit-box;
-		display: -webkit-flex;
-		display: -moz-box;
-		display: -ms-flexbox;
-		display: flex;
-		flex-wrap: wrap;
-		padding-top: 13px;
-	}
-
-	.contact2-form-btn {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		padding: 0 20px;
-		min-width: 244px;
-		height: 50px;
-		font-size: 16px;
-		font-weight: bold;
-		color: #fff;
-		line-height: 1.2;
-		background-color: #678595;
-		border: none;
-	}
-	.contact2-form-btn:active {
-		background-color: #333333;
-	}
-</style>
+</div>
